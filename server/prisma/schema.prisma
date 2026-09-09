@@ -1,0 +1,209 @@
+// BloodBridge Prisma Normalized Relational Schema
+// Designed for SQLite / relational database engines
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  fullName     String
+  phone        String?
+  role         String   @default("DONOR") // DONOR, REQUESTER, HOSPITAL, ADMIN
+  status       String   @default("ACTIVE") // ACTIVE, SUSPENDED
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  donorProfile    DonorProfile?
+  hospitalProfile HospitalProfile?
+  requestsMade    BloodRequest[]         @relation("RequesterRequests")
+  verifications   VerificationRecord[]   @relation("VerifierRecords")
+  notifications   Notification[]
+  statusChanges   RequestStatusHistory[] @relation("StatusChangeUser")
+  auditLogs       AuditLog[]
+
+  @@index([email])
+  @@index([role])
+}
+
+model DonorProfile {
+  id                 String    @id @default(uuid())
+  userId             String    @unique
+  bloodGroup         String // A+, A-, B+, B-, AB+, AB-, O+, O-
+  availabilityStatus String    @default("AVAILABLE") // AVAILABLE, AVAILABLE_LATER, NOT_AVAILABLE
+  latitude           Float     @default(0.0)
+  longitude          Float     @default(0.0)
+  addressCity        String
+  lastDonationDate   DateTime?
+  totalDonations     Int       @default(0)
+  reliabilityScore   Float     @default(100.0) // 0-100 percentage
+  isAnonymous        Boolean   @default(false)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  user    User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  matches DonorMatch[]
+
+  @@index([bloodGroup])
+  @@index([availabilityStatus])
+}
+
+model HospitalProfile {
+  id                    String   @id @default(uuid())
+  userId                String   @unique
+  hospitalName          String
+  licenseNumber         String   @unique
+  address               String
+  latitude              Float    @default(0.0)
+  longitude             Float    @default(0.0)
+  contactNumber         String
+  isVerified            Boolean  @default(true)
+  totalVerifiedRequests Int      @default(0)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  user          User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bloodRequests BloodRequest[]       @relation("HospitalRequests")
+  verifications VerificationRecord[]
+
+  @@index([hospitalName])
+}
+
+model BloodRequest {
+  id                       String   @id // formatted: BB-2026-000101
+  requesterId              String
+  hospitalId               String
+  patientInitials          String // e.g. "R.K." (Privacy preserved, no full patient PII broadcast)
+  bloodGroup               String // A+, A-, B+, B-, AB+, AB-, O+, O-
+  unitsRequired            Int      @default(1)
+  urgency                  String   @default("URGENT") // NORMAL, URGENT, CRITICAL
+  status                   String   @default("PENDING_VERIFICATION")
+  requiredBy               DateTime
+  notes                    String?
+  latitude                 Float    @default(0.0)
+  longitude                Float    @default(0.0)
+  isDuplicateFlagged       Boolean  @default(false)
+  duplicateSimilarityScore Float    @default(0.0)
+  currentEscalationStage   Int      @default(1)
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+
+  requester           User                   @relation("RequesterRequests", fields: [requesterId], references: [id], onDelete: Cascade)
+  hospital            HospitalProfile        @relation("HospitalRequests", fields: [hospitalId], references: [id], onDelete: Cascade)
+  matches             DonorMatch[]
+  statusHistory       RequestStatusHistory[]
+  verificationRecords VerificationRecord[]
+  escalationEvents    EscalationEvent[]
+
+  @@index([status])
+  @@index([bloodGroup])
+  @@index([urgency])
+  @@index([hospitalId])
+  @@index([requesterId])
+}
+
+model DonorMatch {
+  id                  String    @id @default(uuid())
+  requestId           String
+  donorId             String
+  matchScore          Float     @default(0.0)
+  distanceKm          Float     @default(0.0)
+  status              String    @default("NOTIFIED") // NOTIFIED, ACCEPTED, DECLINED, EXPIRED
+  declineReason       String?
+  responseTimeSeconds Int?
+  notifiedAt          DateTime  @default(now())
+  respondedAt         DateTime?
+
+  bloodRequest BloodRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  donor        DonorProfile @relation(fields: [donorId], references: [id], onDelete: Cascade)
+
+  @@index([requestId])
+  @@index([donorId])
+  @@index([status])
+}
+
+model VerificationRecord {
+  id               String   @id @default(uuid())
+  requestId        String
+  hospitalId       String
+  verifiedByUserId String
+  status           String // VERIFIED, REJECTED, INFO_REQUESTED
+  reviewNotes      String?
+  verifiedAt       DateTime @default(now())
+
+  bloodRequest   BloodRequest    @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  hospital       HospitalProfile @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  verifiedByUser User            @relation("VerifierRecords", fields: [verifiedByUserId], references: [id], onDelete: Cascade)
+
+  @@index([requestId])
+  @@index([hospitalId])
+}
+
+model EscalationEvent {
+  id                  String   @id @default(uuid())
+  requestId           String
+  stageNumber         Int
+  radiusKm            Float
+  donorsNotifiedCount Int      @default(0)
+  triggerReason       String
+  triggeredAt         DateTime @default(now())
+
+  bloodRequest BloodRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@index([requestId])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  category  String // EMERGENCY_REQUEST, DONOR_MATCH, REQUEST_ACCEPTED, etc.
+  title     String
+  message   String
+  linkUrl   String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isRead])
+}
+
+model RequestStatusHistory {
+  id              String   @id @default(uuid())
+  requestId       String
+  fromStatus      String
+  toStatus        String
+  changedByUserId String
+  reason          String?
+  timestamp       DateTime @default(now())
+
+  bloodRequest  BloodRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  changedByUser User         @relation("StatusChangeUser", fields: [changedByUserId], references: [id], onDelete: Cascade)
+
+  @@index([requestId])
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  userId      String?
+  action      String
+  entityType  String
+  entityId    String?
+  detailsJson String?
+  ipAddress   String?
+  timestamp   DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([action])
+  @@index([timestamp])
+}
