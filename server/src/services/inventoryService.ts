@@ -33,7 +33,7 @@ export interface HospitalInventoryRecord {
 // In-memory inventory store
 const inventoryStore = new Map<string, HospitalInventoryRecord>();
 
-const ALL_BLOOD_GROUPS: BloodGroup[] = ['A_POS', 'A_NEG', 'B_POS', 'B_NEG', 'AB_POS', 'AB_NEG', 'O_POS', 'O_NEG'];
+const ALL_BLOOD_GROUPS: BloodGroup[] = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
 /**
  * Initializes hospital inventory with zero counts if not already present
@@ -48,7 +48,7 @@ function ensureHospitalInventory(hospitalId: string): HospitalInventoryRecord {
         totalAvailable: 0,
         totalReserved: 0,
         totalExpired: 0,
-        criticalThreshold: bg === 'O_NEG' ? 5 : 3, // O-Neg has higher threshold due to universal donor status
+        criticalThreshold: bg === 'O-' ? 5 : 3, // O- has higher threshold due to universal donor status
         isBelowThreshold: true,
         batches: [],
       });
