@@ -15,7 +15,7 @@ export function sanitizeString(input: string): string {
   return input
     .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') // remove script tags
     .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '') // remove iframes
-    .replace(/on\w+\s*=/gi, '') // remove event handlers like onload=, onerror=
+    .replace(/<[^>]+>/gi, '') // strip all HTML tags
     .replace(/javascript:/gi, '') // remove javascript: urls
     .replace(/[<>]/g, '') // remove stray HTML braces
     .trim();
