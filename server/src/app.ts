@@ -20,6 +20,7 @@ import { feedbackRoutes } from './routes/feedbackRoutes';
 import { emergencyBroadcastRoutes } from './routes/emergencyBroadcastRoutes';
 import { webhookRoutes } from './routes/webhookRoutes';
 import { applySecurityHeaders } from './middleware/securityHeaders';
+import { deepHealthRoutes } from './routes/deepHealthRoutes';
 
 export const app = express();
 
@@ -58,6 +59,7 @@ const apiLimiter = rateLimit({
 app.use('/api', apiLimiter);
 
 // Health check endpoint
+app.use('/api/health', deepHealthRoutes);
 app.get('/api/health', (req: Request, res: Response) => {
   res.json({
     status: 'healthy',
