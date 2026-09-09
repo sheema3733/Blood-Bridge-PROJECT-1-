@@ -267,3 +267,34 @@ export async function getAuditLogs(req: Request, res: Response) {
     return res.status(500).json({ success: false, message: 'Failed to fetch audit logs.' });
   }
 }
+
+export async function getEmergencyReport(req: Request, res: Response) {
+  try {
+    const { startDate, endDate } = req.query;
+    const start = startDate ? new Date(startDate as string) : undefined;
+    const end = endDate ? new Date(endDate as string) : undefined;
+
+    const { generateEmergencyReport } = await import('../services/reportingService');
+    const report = await generateEmergencyReport(start, end);
+
+    return res.json({ success: true, report });
+  } catch (error) {
+    console.error('getEmergencyReport error:', error);
+    return res.status(500).json({ success: false, message: 'Failed to generate emergency report.' });
+  }
+}
+
+export async function exportRequestsCsv(req: Request, res: Response) {
+  try {
+    const { exportRequestsAsCSV } = await import('../services/reportingService');
+    const csv = await exportRequestsAsCSV();
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename="bloodbridge-emergencies.csv"');
+    return res.send(csv);
+  } catch (error) {
+    console.error('exportRequestsCsv error:', error);
+    return res.status(500).json({ success: false, message: 'Failed to export CSV.' });
+  }
+}
+
