@@ -18,6 +18,7 @@ import { healthScreeningRoutes } from './routes/healthScreeningRoutes';
 import { badgeRoutes } from './routes/badgeRoutes';
 import { feedbackRoutes } from './routes/feedbackRoutes';
 import { emergencyBroadcastRoutes } from './routes/emergencyBroadcastRoutes';
+import { webhookRoutes } from './routes/webhookRoutes';
 
 export const app = express();
 
@@ -78,6 +79,7 @@ app.use('/api/health-screening', healthScreeningRoutes);
 app.use('/api/badges', badgeRoutes);
 app.use('/api/feedback', feedbackRoutes);
 app.use('/api/broadcasts', emergencyBroadcastRoutes);
+app.use('/api/webhooks', webhookRoutes);
 
 // Fallback 404 handler for API routes
 app.use('/api/*', (req: Request, res: Response) => {
