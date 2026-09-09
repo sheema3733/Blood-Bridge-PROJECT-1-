@@ -11,6 +11,7 @@ import donorsRoutes from './routes/donorsRoutes';
 import hospitalsRoutes from './routes/hospitalsRoutes';
 import adminRoutes from './routes/adminRoutes';
 import notificationsRoutes from './routes/notificationsRoutes';
+import { inventoryRoutes } from './routes/inventoryRoutes';
 
 export const app = express();
 
@@ -64,6 +65,7 @@ app.use('/api/donors', donorsRoutes);
 app.use('/api/hospitals', hospitalsRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/notifications', notificationsRoutes);
+app.use('/api/inventory', inventoryRoutes);
 
 // Fallback 404 handler for API routes
 app.use('/api/*', (req: Request, res: Response) => {
