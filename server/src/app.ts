@@ -13,6 +13,7 @@ import adminRoutes from './routes/adminRoutes';
 import notificationsRoutes from './routes/notificationsRoutes';
 import { inventoryRoutes } from './routes/inventoryRoutes';
 import { donorPreferencesRoutes } from './routes/donorPreferencesRoutes';
+import { hospitalStaffRoutes } from './routes/hospitalStaffRoutes';
 
 export const app = express();
 
@@ -68,6 +69,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/notifications', notificationsRoutes);
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/donor-preferences', donorPreferencesRoutes);
+app.use('/api/hospital-staff', hospitalStaffRoutes);
 
 // Fallback 404 handler for API routes
 app.use('/api/*', (req: Request, res: Response) => {
