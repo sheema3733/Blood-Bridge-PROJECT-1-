@@ -66,7 +66,8 @@ Get-ChildItem -Path $sourceDir -Recurse -Force | Where-Object {
     }
 }
 
-Compress-Archive -Path "$stagingDir\*" -DestinationPath $destinationZip -CompressionLevel Optimal
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+[System.IO.Compression.ZipFile]::CreateFromDirectory($stagingDir, $destinationZip, [System.IO.Compression.CompressionLevel]::Optimal, $false)
 
 Remove-Item $stagingDir -Recurse -Force
 
