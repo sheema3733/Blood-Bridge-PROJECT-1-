@@ -1,0 +1,33 @@
+{
+  "name": "bloodbridge-platform",
+  "version": "1.0.0",
+  "description": "BloodBridge — Real-Time Emergency Blood Coordination Platform",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
+    "dev:server": "npm run dev --prefix server",
+    "dev:client": "npm run dev --prefix client",
+    "build": "npm run build --prefix server && npm run build --prefix client",
+    "build:server": "npm run build --prefix server",
+    "build:client": "npm run build --prefix client",
+    "start": "npm run start --prefix server",
+    "test": "npm run test --prefix server",
+    "seed": "npm run seed --prefix server",
+    "db:push": "npm run db:push --prefix server",
+    "db:studio": "npm run db:studio --prefix server"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "keywords": [
+    "blood-coordination",
+    "emergency-response",
+    "realtime",
+    "healthcare",
+    "blood-donation",
+    "socketio",
+    "typescript"
+  ],
+  "author": "BloodBridge Engineering Team",
+  "license": "UNLICENSED"
+}
