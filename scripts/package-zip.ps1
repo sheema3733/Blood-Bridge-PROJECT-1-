@@ -21,6 +21,7 @@ $excludePatterns = @(
     "dist",
     "build",
     "coverage",
+    "backups",
     ".env",
     "*.env",
     "*.db",
