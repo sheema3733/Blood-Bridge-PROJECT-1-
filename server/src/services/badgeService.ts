@@ -181,6 +181,8 @@ export function recordVerifiedDonation(params: {
   profile.livesSavedEstimated = profile.totalDonations * 3;
   profile.reputationPoints += 50; // base points per donation
   profile.currentStreak += 1;
+  profile.rankingTier = computeRankingTier(profile.reputationPoints);
+  donorProfiles.set(params.donorId, profile);
 
   const newlyAwarded: DonorAwardedBadge[] = [];
 
@@ -215,7 +217,7 @@ export function recordVerifiedDonation(params: {
   }
 
   // Rare blood check (Rh- or AB)
-  if (params.bloodGroup.includes('NEG') || params.bloodGroup.startsWith('AB')) {
+  if (params.bloodGroup.includes('-') || params.bloodGroup.includes('NEG') || params.bloodGroup.startsWith('AB')) {
     const res = awardBadge(params.donorId, 'RARE_BLOOD_DEFENDER');
     if (res.awarded && res.badge) newlyAwarded.push(res.badge);
   }
