@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="bb-drop-grad" x1="32" y1="6" x2="32" y2="44" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#EF4444" />
+      <stop offset="100%" stop-color="#C5162D" />
+    </linearGradient>
+    <linearGradient id="bb-bridge-grad" x1="8" y1="46" x2="56" y2="46" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#991B1B" />
+      <stop offset="50%" stop-color="#C5162D" />
+      <stop offset="100%" stop-color="#991B1B" />
+    </linearGradient>
+  </defs>
+  <!-- Blood Drop Motif -->
+  <path d="M32 6C32 6 16 23.5 16 35C16 43.8366 23.1634 51 32 51C40.8366 51 48 43.8366 48 35C48 23.5 32 6 32 6Z" fill="url(#bb-drop-grad)" />
+  <!-- Inner Highlight -->
+  <path d="M26 25C26 25 21 31 21 36C21 40 23.5 44 26 45" stroke="#FFFFFF" stroke-opacity="0.35" stroke-width="2.5" stroke-linecap="round" />
+  <!-- Bridge Arch Interlocking Arch -->
+  <path d="M10 54C16 44 48 44 54 54" stroke="url(#bb-bridge-grad)" stroke-width="5" stroke-linecap="round" />
+  <circle cx="10" cy="54" r="3" fill="#991B1B" />
+  <circle cx="54" cy="54" r="3" fill="#991B1B" />
+  <!-- Central Connectivity Cross/Pulse in drop -->
+  <path d="M28 35H36M32 31V39" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" />
+</svg>
