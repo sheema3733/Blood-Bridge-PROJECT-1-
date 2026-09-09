@@ -15,13 +15,18 @@ if (Test-Path $stagingDir) {
 
 New-Item -ItemType Directory -Path $stagingDir | Out-Null
 
-# Exclude dependencies, build artifacts, local databases, and ANY .env files (zero secrets)
+# 1. Reliably copy .git directory with all objects and history using robocopy
+Write-Host "Copying .git repository history..."
+& robocopy "$sourceDir\.git" "$stagingDir\.git" /E /NFL /NDL /NJH /NJS | Out-Null
+
+# 2. Exclude dependencies, build artifacts, local databases, and ANY .env files (zero secrets)
 $excludePatterns = @(
     "node_modules",
     "dist",
     "build",
     "coverage",
     "backups",
+    ".git",
     ".env",
     "*.env",
     "*.db",
@@ -32,7 +37,7 @@ $excludePatterns = @(
     "Thumbs.db"
 )
 
-# Note: -Force includes hidden directories such as .git
+# Copy all project source files
 Get-ChildItem -Path $sourceDir -Recurse -Force | Where-Object {
     $item = $_
     $skip = $false
@@ -66,6 +71,7 @@ Get-ChildItem -Path $sourceDir -Recurse -Force | Where-Object {
     }
 }
 
+# 3. Create zip archive preserving .git
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 [System.IO.Compression.ZipFile]::CreateFromDirectory($stagingDir, $destinationZip, [System.IO.Compression.CompressionLevel]::Optimal, $false)
 
