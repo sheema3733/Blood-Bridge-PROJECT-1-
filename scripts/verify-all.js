@@ -29,7 +29,7 @@ function verifyNoEnvFiles(dir) {
     const fullPath = path.join(dir, item.name);
     if (item.isDirectory()) {
       verifyNoEnvFiles(fullPath);
-    } else if (item.name.startsWith('.env') && item.name !== '.env.example') {
+    } else if (item.name.startsWith('.env')) {
       throw new Error(`Security breach: committed environment file detected at ${fullPath}`);
     }
   }
