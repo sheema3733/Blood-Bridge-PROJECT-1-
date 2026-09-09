@@ -1,0 +1,9 @@
+{
+  "name": "@bloodbridge/inventory-forecasting",
+  "version": "1.0.0",
+  "description": "BloodBridge Healthcare Core Module \u2014 Inventory Forecasting",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "private": true,
+  "license": "UNLICENSED"
+}
