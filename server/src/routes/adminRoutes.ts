@@ -5,6 +5,8 @@ import {
   getUsersList,
   updateUserStatus,
   getAuditLogs,
+  getEmergencyReport,
+  exportRequestsCsv,
 } from '../controllers/adminController';
 import { authenticateToken, requireRoles } from '../middleware/auth';
 
@@ -18,5 +20,7 @@ router.get('/duplicates', getDuplicateReviewQueue);
 router.get('/users', getUsersList);
 router.patch('/users/:userId/status', updateUserStatus);
 router.get('/audit-logs', getAuditLogs);
+router.get('/reports/emergency', getEmergencyReport);
+router.get('/reports/export-csv', exportRequestsCsv);
 
 export default router;
