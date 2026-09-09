@@ -19,10 +19,12 @@ import { badgeRoutes } from './routes/badgeRoutes';
 import { feedbackRoutes } from './routes/feedbackRoutes';
 import { emergencyBroadcastRoutes } from './routes/emergencyBroadcastRoutes';
 import { webhookRoutes } from './routes/webhookRoutes';
+import { applySecurityHeaders } from './middleware/securityHeaders';
 
 export const app = express();
 
 // Security headers
+app.use(applySecurityHeaders);
 app.use(
   helmet({
     contentSecurityPolicy: false, // Let frontend assets load flexibly in development
