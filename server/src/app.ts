@@ -11,10 +11,21 @@ import donorsRoutes from './routes/donorsRoutes';
 import hospitalsRoutes from './routes/hospitalsRoutes';
 import adminRoutes from './routes/adminRoutes';
 import notificationsRoutes from './routes/notificationsRoutes';
+import { inventoryRoutes } from './routes/inventoryRoutes';
+import { donorPreferencesRoutes } from './routes/donorPreferencesRoutes';
+import { hospitalStaffRoutes } from './routes/hospitalStaffRoutes';
+import { healthScreeningRoutes } from './routes/healthScreeningRoutes';
+import { badgeRoutes } from './routes/badgeRoutes';
+import { feedbackRoutes } from './routes/feedbackRoutes';
+import { emergencyBroadcastRoutes } from './routes/emergencyBroadcastRoutes';
+import { webhookRoutes } from './routes/webhookRoutes';
+import { applySecurityHeaders } from './middleware/securityHeaders';
+import { deepHealthRoutes } from './routes/deepHealthRoutes';
 
 export const app = express();
 
 // Security headers
+app.use(applySecurityHeaders);
 app.use(
   helmet({
     contentSecurityPolicy: false, // Let frontend assets load flexibly in development
@@ -48,6 +59,7 @@ const apiLimiter = rateLimit({
 app.use('/api', apiLimiter);
 
 // Health check endpoint
+app.use('/api/health', deepHealthRoutes);
 app.get('/api/health', (req: Request, res: Response) => {
   res.json({
     status: 'healthy',
@@ -64,6 +76,14 @@ app.use('/api/donors', donorsRoutes);
 app.use('/api/hospitals', hospitalsRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/notifications', notificationsRoutes);
+app.use('/api/inventory', inventoryRoutes);
+app.use('/api/donor-preferences', donorPreferencesRoutes);
+app.use('/api/hospital-staff', hospitalStaffRoutes);
+app.use('/api/health-screening', healthScreeningRoutes);
+app.use('/api/badges', badgeRoutes);
+app.use('/api/feedback', feedbackRoutes);
+app.use('/api/broadcasts', emergencyBroadcastRoutes);
+app.use('/api/webhooks', webhookRoutes);
 
 // Fallback 404 handler for API routes
 app.use('/api/*', (req: Request, res: Response) => {

@@ -1,134 +1,149 @@
-# BloodBridge — REST API Reference Manual
+# BloodBridge REST API Reference
 
-Base URL: `http://localhost:5000/api`
-
-All authenticated endpoints require an `Authorization` HTTP header:
-```
-Authorization: Bearer <JWT_TOKEN>
-```
+Comprehensive specification of all REST endpoints provided by the BloodBridge coordination backend.
 
 ---
 
-## 1. Authentication Domain (`/api/auth`)
+## Base URL
+- Development: `http://localhost:5000/api`
+- Production: `https://bloodbridge.org/api`
+
+---
+
+## 1. Authentication (`/api/auth`)
 
 ### `POST /api/auth/register`
-Creates a new platform account with role-specific profile (`DONOR`, `REQUESTER`, `HOSPITAL`, `ADMIN`).
-- **Body**:
-  ```json
-  {
-    "email": "user@example.com",
-    "password": "Password123!",
-    "fullName": "Jane Doe",
-    "role": "DONOR",
-    "phone": "+1-555-0199",
-    "bloodGroup": "O-",
-    "addressCity": "Downtown Metro"
-  }
-  ```
-- **Response `201 Created`**: Returns `{ success: true, token, user }`.
+Register a new donor, requester, or hospital account.
+- **Body**: `{ email, password, fullName, role, phone, ... }`
+- **Response `201`**: `{ success: true, user: { id, email, role }, token: "JWT..." }`
 
 ### `POST /api/auth/login`
-Authenticates credentials and issues a 7-day signed JWT bearer token.
-- **Body**: `{ "email": "user@example.com", "password": "Password123!" }`
-- **Response `200 OK`**: Returns `{ success: true, token, user }`.
+Authenticate credentials and issue session JWT.
+- **Body**: `{ email, password }`
+- **Response `200`**: `{ success: true, user, token }`
 
 ### `GET /api/auth/me`
-Retrieves authenticated user profile and active donor/hospital metadata.
-- **Auth**: Required.
-
-### `POST /api/auth/demo-login`
-Instant fast-login switcher for evaluation.
-- **Body**: `{ "role": "DONOR" | "REQUESTER" | "HOSPITAL" | "ADMIN" }`
-- **Response `200 OK`**: Authenticates pre-seeded synthetic account.
+Retrieve authenticated profile context. Requires `Authorization: Bearer <TOKEN>`.
 
 ---
 
-## 2. Emergency Blood Requests (`/api/requests`)
-
-### `POST /api/requests`
-Initiates a new emergency blood request with duplicate detection checks.
-- **Auth**: Required (`REQUESTER`, `ADMIN`).
-- **Body**:
-  ```json
-  {
-    "hospitalId": "UUID",
-    "patientInitials": "M.K.",
-    "bloodGroup": "A+",
-    "unitsRequired": 2,
-    "urgency": "CRITICAL",
-    "requiredBy": "2026-09-09T18:00:00.000Z",
-    "notes": "Emergency thoracic surgery in ICU."
-  }
-  ```
-- **Response `201 Created`**: Returns `{ success: true, request, duplicateWarning }`.
+## 2. Emergency Coordination Requests (`/api/requests`)
 
 ### `GET /api/requests`
-Lists emergency blood requests with multi-parameter filtering.
-- **Query Params**: `status`, `bloodGroup`, `urgency`, `hospitalId`, `isDuplicateFlagged`, `page`, `limit`.
+Fetch requests with optional filtering by status, urgency, or blood group.
+
+### `POST /api/requests`
+Create a new emergency blood coordination request.
+- **Role**: `REQUESTER`, `HOSPITAL`, `ADMIN`
+- **Body**: `{ patientName, bloodGroup, units, urgency, hospitalId, ... }`
 
 ### `GET /api/requests/:id`
-Fetches full request details, including hospital metadata, 8-step status history, matched donors, and escalation events.
+Fetch single request details and live matching timeline.
 
-### `POST /api/requests/:id/complete`
-Marks blood units safely received at the hospital and completes the coordination lifecycle.
-- **Auth**: Required (`REQUESTER`, `HOSPITAL`, `ADMIN`).
+### `PATCH /api/requests/:id/verify`
+Hospital clinical verification of blood requirement.
+- **Role**: `HOSPITAL`, `ADMIN`
 
-### `POST /api/requests/:id/escalate`
-Triggers immediate smart escalation to the next radius stage.
-
----
-
-## 3. Donors Domain (`/api/donors`)
-
-### `GET /api/donors/dashboard`
-Returns donor profile, incoming live emergency calls (`NOTIFIED`), active commitments (`ACCEPTED`), and completed donation history.
-- **Auth**: Required (`DONOR`, `ADMIN`).
-
-### `PUT /api/donors/availability`
-Updates donor real-time availability status (`AVAILABLE`, `AVAILABLE_LATER`, `NOT_AVAILABLE`).
-- **Auth**: Required (`DONOR`, `ADMIN`).
-
-### `POST /api/donors/matches/:matchId/respond`
-Donor accepts or declines an emergency donation dispatch.
-- **Auth**: Required (`DONOR`, `ADMIN`).
-- **Body**: `{ "action": "ACCEPT" | "DECLINE", "declineReason": "Optional string" }`
+### `POST /api/requests/:id/respond`
+Donor accepts or declines an emergency dispatch notification.
+- **Role**: `DONOR`
 
 ---
 
-## 4. Hospitals Domain (`/api/hospitals`)
+## 3. Hospital Blood Inventory (`/api/inventory`)
 
-### `GET /api/hospitals`
-Returns list of verified hospitals for dropdown selectors.
+### `GET /api/inventory`
+Query live blood unit balances, reservations, and critical alerts.
+- **Role**: `HOSPITAL`, `ADMIN`
 
-### `GET /api/hospitals/dashboard`
-Returns pending verification queue, active admitted emergency coordination, and completed logs.
-- **Auth**: Required (`HOSPITAL`, `ADMIN`).
+### `POST /api/inventory/restock`
+Record a new blood batch into inventory.
+- **Role**: `HOSPITAL`, `ADMIN`
+- **Body**: `{ hospitalId, bloodGroup, units, collectedAt, shelfLifeDays }`
 
-### `POST /api/hospitals/requests/:requestId/verify`
-Hospital clinical verification decision.
-- **Auth**: Required (`HOSPITAL`, `ADMIN`).
-- **Body**: `{ "status": "VERIFIED" | "REJECTED" | "INFO_REQUESTED", "reviewNotes": "String" }`
+### `POST /api/inventory/reserve`
+Lock units for confirmed surgical emergency.
+- **Role**: `HOSPITAL`, `ADMIN`
+- **Body**: `{ hospitalId, bloodGroup, units }`
+
+### `POST /api/inventory/dispense`
+Dispense reserved units for patient transfusion.
+- **Role**: `HOSPITAL`, `ADMIN`
 
 ---
 
-## 5. Administrative Domain (`/api/admin`)
+## 4. Donor Preferences (`/api/donor-preferences`)
 
-### `GET /api/admin/overview`
-Computes live platform metrics, blood group demand distribution, and emergency counts.
-- **Auth**: Required (`ADMIN`).
+### `GET /api/donor-preferences`
+Retrieve travel range, channel, and quiet hour settings.
+- **Role**: `DONOR`, `ADMIN`
 
-### `GET /api/admin/duplicates`
-Lists requests flagged by duplicate detection algorithm for triage.
-- **Auth**: Required (`ADMIN`).
+### `PUT /api/donor-preferences`
+Update alert configuration.
+- **Body**: `{ maxTravelDistanceKm, channels, quietHoursEnabled, quietHoursStart, quietHoursEnd, emergencyOnly }`
 
-### `GET /api/admin/users`
-User governance list with role and status filtering.
-- **Auth**: Required (`ADMIN`).
+---
 
-### `PATCH /api/admin/users/:userId/status`
-Toggles account activation (`ACTIVE` / `SUSPENDED`).
-- **Auth**: Required (`ADMIN`).
+## 5. Clinical Staff Roster (`/api/hospital-staff`)
 
-### `GET /api/admin/audit-logs`
-Returns chronological security and operational audit trails.
-- **Auth**: Required (`ADMIN`).
+### `GET /api/hospital-staff`
+List delegated doctors, nurses, and technicians for a facility.
+
+### `POST /api/hospital-staff`
+Invite and delegate permissions to clinical personnel.
+
+### `DELETE /api/hospital-staff/:id`
+Deactivate clinical staff credentials.
+
+---
+
+## 6. Pre-Screening & Clinical Safety (`/api/health-screening`)
+
+### `POST /api/health-screening/evaluate`
+Evaluate donor self-assessment questionnaire prior to dispatch.
+- **Body**: `{ weightKg, ageYears, feelsHealthyToday, hasActiveFeverOrInfection, ... }`
+- **Response**: `{ success: true, data: { isEligible, disqualifyingReasons, advisories, nextEligibleDate } }`
+
+---
+
+## 7. Donor Badges & Community Leaderboard (`/api/badges`)
+
+### `GET /api/badges/profile`
+Retrieve donor gamification ranking, streak, and awarded badges.
+
+### `GET /api/badges/leaderboard`
+Top community lifesavers sorted by reputation score.
+
+### `GET /api/badges/catalog`
+Full catalog of unlockable achievement badges.
+
+---
+
+## 8. Gratitude & Feedback (`/api/feedback`)
+
+### `POST /api/feedback`
+Submit post-donation star rating, punctuality score, and note.
+
+### `GET /api/feedback/donor/:donorId`
+Aggregated testimonials and average rating for a donor.
+
+---
+
+## 9. Regional Emergency Broadcasts (`/api/broadcasts`)
+
+### `GET /api/broadcasts/active`
+Fetch active regional mass-casualty alerts (Public).
+
+### `POST /api/broadcasts`
+Issue a new multi-channel emergency broadcast.
+- **Role**: `ADMIN`
+
+---
+
+## 10. System Health & Diagnostics (`/api/health`)
+
+### `GET /api/health`
+Basic service ping (`200 OK`).
+
+### `GET /api/health/deep`
+Comprehensive diagnostics: process memory (RSS/heap), uptime, database query latency, and live socket connection counter.
